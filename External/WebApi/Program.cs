@@ -1,41 +1,37 @@
+using Application.Services;
+using Domain.Interfaces;
+using Infra.Context;
+using Infra.Repositories;
+using Microsoft.EntityFrameworkCore;
+using WebApi.Endpoints;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-var app = builder.Build();
+builder.Services.AddScoped<TaskService>();
 
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+
+var connectionString = builder.Configuration.GetConnectionString("Sqlite");
+builder.Services.AddDbContext<EFDbContext>(opt => opt.UseSqlite(connectionString));
+
+var app = builder.Build();
+CreateDatabase(app);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
+app.MapTasksEndpoints();
 app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+
+static void CreateDatabase(WebApplication app)
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    var serviceScope = app.Services.CreateScope();
+    var dataContext = serviceScope.ServiceProvider.GetService<EFDbContext>();
+    dataContext?.Database.EnsureCreated();
 }
