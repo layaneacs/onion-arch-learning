@@ -1,7 +1,12 @@
 namespace Domain.Entities;
-public class TaskItem
+public class TaskItem(Guid id, string title)
 {
-    public Guid Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public bool IsCompleted { get; set; }
+    public Guid Id { get; private set; } = id;
+    public string Title { get; private set; } = title;
+    public bool IsCompleted { get; private set; } = false;
+
+    public void MarkAsCompleted()
+    {
+        IsCompleted = true;
+    }
 }

@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Domain.Entities;
 using Domain.Interfaces;
 
@@ -11,18 +10,13 @@ public class TaskService(ITaskRepository taskRepository)
         {
             throw new ArgumentNullException(nameof(taskItem));
         }
-        taskItem.IsCompleted = true;
+        taskItem.MarkAsCompleted();
         await taskRepository.UpdateTask(taskItem);
     }
 
     public async Task<TaskItem> CreateTask(string title)
     {
-        var taskItem = new TaskItem
-        {
-            Id = Guid.NewGuid(),
-            Title = title,
-            IsCompleted = false
-        };
+        var taskItem = new TaskItem(Guid.NewGuid(), title);
         return await taskRepository.CreateTask(taskItem);
     }
 
